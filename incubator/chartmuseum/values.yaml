@@ -15,4 +15,13 @@ resources:
     cpu: 80m
     memory: 64Mi
 
+# Currently storage can be one of: [local, amazon]
 storage: local
+
+amazon:
+  access_key:
+  secret_key:
+  region: us-east-1
+  bucket:
+  prefix:
+  endpoint:

@@ -12,20 +12,50 @@ spec:
       labels:
         app: {{ template "common.name" . }}
         release: {{ .Release.Name | quote }}
+      {{- if eq .Values.storage "amazon" }}
+      annotations:
+        checksum/secret: {{ include (print $.Template.BasePath "/amazon-secret.yaml") . | sha256sum }}
+      {{- end }}
     spec:
+      {{- if eq .Values.storage "local" }}
       volumes:
       - name: storage-volume
         emptyDir: {}
+      {{- end }}
       containers:
       - name: {{ .Chart.Name }}
         image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
         - name: STORAGE
-          value: {{ .Values.storage }}
+          value: {{ required "You must provide the storage provider you which to use." .Values.storage }}
         {{- if eq .Values.storage "local" }}
         - name: STORAGE_LOCAL_ROOTDIR
           value: /storage
+        {{- end }}
+        {{- if eq .Values.storage "amazon" }}
+        - name: STORAGE_AMAZON_BUCKET
+          value: {{ required "You must provide a S3 Bucket to use." .Values.amazon.bucket }}
+        - name: STORAGE_AMAZON_REGION
+          value: {{ required "You must set the region where your S3 Bucket is being hosted." .Values.amazon.region }}
+        {{- if .Values.amazon.prefix }}
+        - name: STORAGE_AMAZON_PREFIX
+          value: {{ .Values.amazon.prefix }}
+        {{- end }}
+        {{- if .Values.amazon.endpoint }}
+        - name: STORAGE_AMAZON_ENDPOINT
+          value: {{ .Values.amazon.endpoint }}
+        {{- end }}
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "common.fullname" . }}-amazon
+              key: access_key
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "common.fullname" . }}-amazon
+              key: secret_key
         {{- end }}
         - name: PORT
           value: "{{ .Values.service.internalPort }}"

@@ -22,9 +22,11 @@ spec:
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
         - name: STORAGE
-          value: local
+          value: {{ .Values.storage }}
+        {{- if eq .Values.storage "local" }}
         - name: STORAGE_LOCAL_ROOTDIR
           value: /storage
+        {{- end }}
         - name: PORT
           value: "{{ .Values.service.internalPort }}"
         - name: DEBUG
@@ -39,8 +41,10 @@ spec:
           httpGet:
             path: /index.yaml
             port: {{ .Values.service.internalPort }}
+        {{- if eq .Values.storage "local" }}
         volumeMounts:
         - mountPath: /storage
           name: storage-volume
+        {{- end }}
         resources:
 {{ toYaml .Values.resources | indent 10 }}

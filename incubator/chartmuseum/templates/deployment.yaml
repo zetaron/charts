@@ -20,11 +20,15 @@ spec:
       - name: {{ .Chart.Name }}
         image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
-        args:
-        - --port={{ .Values.service.internalPort }}
-        - --debug
-        - --storage=local
-        - --storage-local-rootdir=/storage
+        env:
+        - name: STORAGE
+          value: local
+        - name: STORAGE_LOCAL_ROOTDIR
+          value: /storage
+        - name: PORT
+          value: "{{ .Values.service.internalPort }}"
+        - name: DEBUG
+          value: "true"
         ports:
         - containerPort: {{ .Values.service.internalPort }}
         livenessProbe:
